@@ -1,21 +1,21 @@
 from fastapi import FastAPI, Request
+import os
 import requests
-import google.generativeai as genai
+from google import genai
 
 app = FastAPI()
 
 # ==========================================
-# KONFIGURASI KREDENSIAL
+# KONFIGURASI KREDENSIAL (OTOMATIS DARI RENDER)
 # ==========================================
-# Ganti dengan API Key yang kamu dapatkan di halaman Guide Infobip
-INFOBIP_API_KEY = "INFOBIP_API_KEY"
-BASE_URL = "https://2ynndw.api.infobip.com"
-TEST_SENDER_NUMBER = "447860088970" # Nomor sender sandbox bawaan Infobip
+INFOBIP_API_KEY = os.getenv("INFOBIP_API_KEY", "")
+BASE_URL = os.getenv("INFOBIP_BASE_URL", "https://2ynndw.api.infobip.com")
+TEST_SENDER_NUMBER = "447860088970"
 
-# Konfigurasi Gemini AI
-GEMINI_API_KEY = "GEMINI_API_KEY"
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-3.5-flash-lite")
+# Membaca GEMINI_API_KEY dari Environment Render
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+client = genai.Client(api_key=GEMINI_API_KEY)
+
 
 # ==========================================
 # FUNGSI UNTUK KIRIM BALASAN KE WHATSAPP
@@ -25,17 +25,16 @@ def kirim_pesan_wa(nomor_tujuan: str, teks_balasan: str):
     headers = {
         "Authorization": INFOBIP_API_KEY,
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Accept": "application/json",
     }
     payload = {
         "from": TEST_SENDER_NUMBER,
         "to": nomor_tujuan,
-        "content": {
-            "text": teks_balasan
-        }
+        "content": {"text": teks_balasan},
     }
     response = requests.post(endpoint, json=payload, headers=headers)
     return response.status_code
+
 
 # ==========================================
 # ENDPOINT WEBHOOK (PENERIMA PESAN MASUK)
@@ -43,8 +42,6 @@ def kirim_pesan_wa(nomor_tujuan: str, teks_balasan: str):
 @app.post("/webhook")
 async def terima_pesan_wa(request: Request):
     data = await request.json()
-    
-    # Membaca struktur data pesan masuk dari Infobip
     try:
         results = data.get("results", [])
         if not results:
@@ -57,20 +54,22 @@ async def terima_pesan_wa(request: Request):
         if not isi_chat:
             return {"status": "bukan pesan teks"}
 
-        # Proses pesan dengan Gemini AI
+        # Proses pesan dengan Gemini model terbaru
         prompt = f"Lu adalah customer service toko Sota Store di WhatsApp. Jawab ramah, singkat, dan solutif (maks 2 kalimat): {isi_chat}"
-        ai_response = model.generate_content(prompt)
+        ai_response = client.models.generate_content(
+            model="gemini-2.5-flash", contents=prompt
+        )
         jawaban_ai = ai_response.text
 
         # Tembak balik jawaban ke WhatsApp pengirim
         kirim_pesan_wa(nomor_pengirim, jawaban_ai)
-
     except Exception as e:
         print(f"Error processing webhook: {e}")
 
     return {"status": "success"}
 
-# Jalankan server lokal/cloud di port 8080
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8080)

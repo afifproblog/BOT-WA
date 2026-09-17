@@ -8,12 +8,12 @@ app = FastAPI()
 # KONFIGURASI KREDENSIAL
 # ==========================================
 # Ganti dengan API Key yang kamu dapatkan di halaman Guide Infobip
-INFOBIP_API_KEY = "T"
+INFOBIP_API_KEY = "INFOBIP_API_KEY"
 BASE_URL = "https://2ynndw.api.infobip.com"
 TEST_SENDER_NUMBER = "447860088970" # Nomor sender sandbox bawaan Infobip
 
 # Konfigurasi Gemini AI
-GEMINI_API_KEY = "A"
+GEMINI_API_KEY = "GEMINI_API_KEY"
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-3.5-flash-lite")
 

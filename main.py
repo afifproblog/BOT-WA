@@ -23,7 +23,7 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 def kirim_pesan_wa(nomor_tujuan: str, teks_balasan: str):
     endpoint = f"{BASE_URL}/whatsapp/1/message/text"
     headers = {
-        "Authorization": INFOBIP_API_KEY,
+        "Authorization": f"App {INFOBIP_API_KEY}",
         "Content-Type": "application/json",
         "Accept": "application/json",
     }

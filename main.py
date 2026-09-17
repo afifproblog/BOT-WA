@@ -57,7 +57,7 @@ async def terima_pesan_wa(request: Request):
         # Proses pesan dengan Gemini model terbaru
         prompt = f"Lu adalah customer service toko Sota Store di WhatsApp. Jawab ramah, singkat, dan solutif (maks 2 kalimat): {isi_chat}"
         ai_response = client.models.generate_content(
-            model="gemini-2.5-flash", contents=prompt
+            model="gemini-3.5-flash-lite", contents=prompt
         )
         jawaban_ai = ai_response.text
 
